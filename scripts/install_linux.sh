@@ -140,7 +140,7 @@ get_application_code() {
     else
         log_warning "请确保已克隆项目到: $APP_DIR"
         log_info "您可以运行以下命令克隆项目："
-        echo "  git clone https://github.com/yourusername/binance-ai-analyzer.git /opt/binance-ai-analyzer"
+        echo "  git clone https://github.com/guanzihao166/binance_api.git /opt/binance-ai-analyzer"
         exit 1
     fi
     
@@ -247,7 +247,7 @@ create_systemd_service() {
     cat > "$SERVICE_FILE" << EOF
 [Unit]
 Description=Binance AI Analyzer - 币安期货AI分析系统
-Documentation=https://github.com/yourusername/binance-ai-analyzer
+Documentation=https://github.com/guanzihao166/binance_api
 After=network-online.target
 Wants=network-online.target
 

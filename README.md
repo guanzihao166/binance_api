@@ -84,8 +84,8 @@
 #### Windows
 ```powershell
 # 克隆项目
-git clone https://github.com/yourusername/binance-ai-analyzer.git
-cd binance-ai-analyzer
+git clone https://github.com/guanzihao166/binance_api.git
+cd binance_api
 
 # 创建虚拟环境
 python -m venv venv
@@ -107,8 +107,8 @@ streamlit run main.py
 #### Linux/macOS
 ```bash
 # 克隆项目
-git clone https://github.com/yourusername/binance-ai-analyzer.git
-cd binance-ai-analyzer
+git clone https://github.com/guanzihao166/binance_api.git
+cd binance_api
 
 # 创建虚拟环境
 python3 -m venv venv
@@ -132,7 +132,7 @@ streamlit run main.py
 #### 完全自动化安装（推荐）
 ```bash
 # 下载安装脚本
-wget https://github.com/yourusername/binance-ai-analyzer/raw/main/scripts/install_linux.sh
+wget https://github.com/guanzihao166/binance_api/raw/master/scripts/install_linux.sh
 chmod +x install_linux.sh
 
 # 运行安装
@@ -155,7 +155,7 @@ sudo mkdir -p /opt/binance-ai-analyzer
 cd /opt/binance-ai-analyzer
 
 # 3. 克隆项目
-sudo git clone https://github.com/yourusername/binance-ai-analyzer.git .
+sudo git clone https://github.com/guanzihao166/binance_api.git .
 
 # 4. 创建虚拟环境
 sudo python3 -m venv venv
@@ -188,7 +188,7 @@ sudo systemctl start binance-ai-analyzer
 ```ini
 [Unit]
 Description=Binance AI Analyzer - 币安期货AI分析系统
-Documentation=https://github.com/yourusername/binance-ai-analyzer
+Documentation=https://github.com/guanzihao166/binance_api
 After=network-online.target
 Wants=network-online.target
 
@@ -493,7 +493,7 @@ flake8 *.py --max-line-length=100
 - 🚀 [快速开始](QUICKSTART.md)
 - ✨ [功能说明](FEATURES.md)
 - 🐛 [故障排除](BUG_REPORT.md)
-- 💬 [GitHub Issues](https://github.com/yourusername/binance-ai-analyzer/issues)
+- 💬 [GitHub Issues](https://github.com/guanzihao166/binance_api/issues)
 
 ---
 

@@ -223,15 +223,15 @@
 
 ### 快速开始（3分钟）
 ```bash
-git clone https://github.com/yourusername/binance-ai-analyzer.git
-cd binance-ai-analyzer
+git clone https://github.com/guanzihao166/binance_api.git
+cd binance_api
 source .env  # 配置API密钥
 streamlit run main.py
 ```
 
 ### Linux一键部署
 ```bash
-sudo bash <(curl -s https://raw.githubusercontent.../install_linux.sh)
+sudo bash <(curl -s https://raw.githubusercontent.com/guanzihao166/binance_api/master/scripts/install_linux.sh)
 ```
 
 ### 更新应用

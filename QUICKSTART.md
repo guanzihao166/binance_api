@@ -21,8 +21,8 @@
 
 #### Windows
 ```powershell
-git clone https://github.com/yourusername/binance-ai-analyzer.git
-cd binance-ai-analyzer
+git clone https://github.com/guanzihao166/binance_api.git
+cd binance_api
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
@@ -36,8 +36,8 @@ streamlit run main.py
 
 #### Linux/macOS
 ```bash
-git clone https://github.com/yourusername/binance-ai-analyzer.git
-cd binance-ai-analyzer
+git clone https://github.com/guanzihao166/binance_api.git
+cd binance_api
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -200,7 +200,7 @@ sudo bash <(curl -s https://raw.github.../install_linux.sh)
 - 📖 [完整文档](README.md)
 - 🐛 [故障排除](BUG_REPORT.md)
 - ✨ [功能详解](FEATURES.md)
-- 💬 [GitHub Issues](https://github.com/yourusername/binance-ai-analyzer/issues)
+- 💬 [GitHub Issues](https://github.com/guanzihao166/binance_api/issues)
 
 ---
 
