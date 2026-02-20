@@ -68,15 +68,44 @@ class BinanceAPI:
     def get_klines(self, symbol, interval, limit=100):
         """获取K线数据"""
         try:
+            # 验证交易对格式
+            if not symbol or not isinstance(symbol, str):
+                print(f"❌ 无效的交易对: {symbol}")
+                return None
+            
+            # 确保交易对大写
+            symbol = symbol.upper()
+            
+            # 验证交易对格式（应该包含USDT）
+            if 'USDT' not in symbol:
+                print(f"❌ 不支持的交易对格式: {symbol}（必须是USDT交易对）")
+                return None
+            
             params = {
                 'symbol': symbol,
                 'interval': interval,
                 'limit': limit
             }
-            result = self._request('GET', '/fapi/v1/klines', params, signed=False)
+            
+            try:
+                result = self._request('GET', '/fapi/v1/klines', params, signed=False)
+            except Exception as e:
+                error_msg = str(e)
+                # 处理特定的币安错误
+                if "Invalid symbol" in error_msg or "-1121" in error_msg:
+                    print(f"❌ 币安API错误: {symbol} 不是有效的交易对")
+                    print(f"   请确认交易对名称正确（例如：BTCUSDT, ETHUSDT）")
+                    return None
+                elif "400" in error_msg:
+                    print(f"❌ API请求错误 (400): {symbol} - {error_msg}")
+                    return None
+                raise
+            
             # 验证返回的数据
             if result and isinstance(result, list) and len(result) > 0:
                 return result
+            
+            print(f"⚠️ 获取K线数据为空: {symbol}")
             return None
         except Exception as e:
             print(f"❌ 获取K线数据失败 ({symbol}): {e}")
@@ -452,11 +481,17 @@ class DeepSeekAnalyzer:
 
 
 class BackgroundAnalysisManager:
-    """后台AI分析管理器（后端负责所有复杂逻辑）"""
+    """
+    后台AI分析管理器（后端负责所有复杂逻辑）
+    
+    核心原则：
+    - 不维护内存缓存（Streamlit重新运行时会丢失）
+    - 直接依赖数据库缓存系统
+    - 缓存过期由数据库根据 TTL 自动管理
+    """
     
     def __init__(self):
-        self.last_analysis_time = {}  # 记录每个币种最后一次有效分析的时间
-        self.analysis_interval = 300  # 5分钟间隔（秒）
+        pass  # 不需要维护任何状态变量
     
     def validate_and_parse_json(self, raw_text: str, max_retries: int = 2) -> dict:
         """验证和解析AI返回的JSON，包括重试机制"""
@@ -496,18 +531,29 @@ class BackgroundAnalysisManager:
         except json.JSONDecodeError:
             return None
     
-    def should_update_analysis(self, symbol: str) -> bool:
-        """检查是否应该更新该币种的分析（5分钟间隔检查）"""
-        current_time = time.time()
-        last_time = self.last_analysis_time.get(symbol, 0)
-        return current_time - last_time >= self.analysis_interval
+    def should_update_analysis(self, symbol: str, cache) -> bool:
+        """
+        检查是否应该更新该币种的分析
+        
+        策略：不依赖内存中的时间戳（Streamlit重新运行时会被清空）
+        而是直接检查数据库中的缓存是否有效
+        """
+        # 优先检查数据库缓存
+        cached = cache.get_analysis(symbol)
+        
+        if cached:
+            # 缓存存在且有效（get_analysis会自动检查过期时间）
+            return False
+        
+        # 缓存不存在或已过期，需要更新
+        return True
     
     def fetch_and_store_analysis(self, api_client, deepseek_analyzer, symbol: str, kline_data: list, cache) -> dict:
         """从API获取分析并存储（带JSON验证和重试）"""
         try:
-            # 检查是否需要更新
-            if not self.should_update_analysis(symbol):
-                # 返回缓存的有效分析
+            # 检查是否需要更新：直接检查数据库缓存
+            if not self.should_update_analysis(symbol, cache):
+                # 返回缓存的有效分析（缓存必然存在）
                 cached = cache.get_analysis(symbol)
                 if cached:
                     return {'success': True, 'data': cached, 'from_cache': True}
@@ -564,7 +610,7 @@ class BackgroundAnalysisManager:
                             'funding_rate': funding_rate_value
                         }
                         cache.set_analysis(symbol, cache_data)
-                        self.last_analysis_time[symbol] = time.time()
+                        # （缓存过期由数据库 TTL 自动管理，不需要维护内存时间戳）
                         return {'success': True, 'data': cache_data}
                     
                 except Exception as e:

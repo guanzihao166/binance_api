@@ -1,6 +1,15 @@
 import sqlite3
 import json
 import time
+from datetime import datetime
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """自定义JSON encoder，支持datetime对象序列化"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()  # 转换为ISO格式字符串
+        return super().default(obj)
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -413,10 +422,11 @@ class AnalysisCache:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 timestamp = time.time()
+                # 使用自定义encoder处理datetime对象
                 cursor.execute('''
                     INSERT INTO binance_data (symbol, kline_data, funding_rate, timestamp)
                     VALUES (?, ?, ?, ?)
-                ''', (symbol, json.dumps(kline_data, ensure_ascii=False), funding_rate, timestamp))
+                ''', (symbol, json.dumps(kline_data, cls=DateTimeEncoder, ensure_ascii=False), funding_rate, timestamp))
                 # 清理7天之前的数据
                 cutoff = timestamp - self.binance_ttl_seconds
                 cursor.execute('DELETE FROM binance_data WHERE timestamp < ?', (cutoff,))
