@@ -63,6 +63,93 @@
 
 ---
 
+## ⚡ 快速问题排除
+
+### 问题1：`streamlit: command not found`
+
+这说明虚拟环境还没有被激活。**三选一解决**：
+
+#### ✅ 方案1 - 运行便捷脚本（推荐）
+```bash
+cd /www/wwwroot/binance
+./run.sh
+```
+
+#### ✅ 方案2 - 激活虚拟环境后运行
+```bash
+cd /www/wwwroot/binance
+source venv/bin/activate
+streamlit run main.py
+```
+
+#### ✅ 方案3 - 直接使用虚拟环境中的 streamlit
+```bash
+/www/wwwroot/binance/venv/bin/streamlit run /www/wwwroot/binance/main.py
+```
+
+---
+
+### 问题2：`缺少必需的环境变量: BINANCE_API_KEY`
+
+这说明 `.env` 配置文件未设置或未填入API密钥。**快速解决**：
+
+#### ✅ 步骤1：创建 .env 配置文件
+```bash
+cd /www/wwwroot/binance
+
+# 复制模板文件
+cp .env.example .env
+
+# 编辑配置文件
+nano .env  # 或使用其他编辑器如 vim
+```
+
+#### ✅ 步骤2：填入你的API密钥
+
+编辑 `.env` 文件，修改以下内容：
+```bash
+# 币安期货API配置
+BINANCE_API_KEY=你的币安API密钥
+BINANCE_API_SECRET=你的币安API秘密
+
+# DeepSeek AI API配置
+DEEPSEEK_API_KEY=你的DeepSeek API密钥
+```
+
+#### ✅ 步骤3：保存并重新运行应用
+```bash
+# 按 Ctrl+C 停止当前应用（如果正在运行）
+# 然后重新启动
+./run.sh
+```
+
+---
+
+### 问题3：要在后台运行应用（推荐用于生产）
+
+使用后台管理脚本：
+
+```bash
+# 启动应用（后台运行）
+./daemon.sh start
+
+# 查看运行状态
+./daemon.sh status
+
+# 查看实时日志
+./daemon.sh logs
+
+# 停止应用
+./daemon.sh stop
+
+# 重启应用
+./daemon.sh restart
+```
+
+详见 [RUNNING.md](RUNNING.md) 了解更多运行方式和故障排除。
+
+---
+
 ## 🚀 快速开始
 
 ### 1️⃣ 获取API密钥

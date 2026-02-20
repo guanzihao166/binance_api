@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# 币安期货AI分析系统 - 便捷启动脚本
+# 可在任何位置执行，自动激活虚拟环境并启动应用
+#
+# 使用方法:
+#   binance-run                    # 在当前目录启动
+#   /www/wwwroot/binance/binance-run  # 使用完整路径
+#
+
+set -e
+
+# 获取脚本所在的项目目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+echo "=========================================="
+echo "币安期货AI分析系统"
+echo "=========================================="
+echo ""
+echo "项目目录: $SCRIPT_DIR"
+echo ""
+
+# 检查虚拟环境
+if [[ ! -d "venv" ]]; then
+    echo "⚠️  未检测到虚拟环境"
+    echo "正在创建虚拟环境..."
+    python3.11 -m venv venv 2>/dev/null || python3 -m venv venv
+    
+    echo "升级pip..."
+    ./venv/bin/pip install -q --upgrade pip setuptools wheel
+    
+    echo "安装依赖..."
+    ./venv/bin/pip install -q -r requirements.txt
+    echo ""
+fi
+
+echo "激活虚拟环境..."
+source venv/bin/activate
+
+echo "启动应用..."
+echo ""
+echo "=========================================="
+echo "✓ 应用已启动"
+echo "访问地址: http://localhost:8501"
+echo "按 Ctrl+C 停止应用"
+echo "=========================================="
+echo ""
+
+# 启动应用
+streamlit run main.py \
+    --server.address=0.0.0.0 \
+    --server.port=8501 \
+    --logger.level=info
+
+# 退出虚拟环境
+deactivate

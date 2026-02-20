@@ -2,7 +2,222 @@
 
 > **如果你刚部署好应用，找不到 streamlit 命令，请按照本指南解决！**
 
+## 目录
+- [问题诊断](#问题诊断)
+- [配置 API 密钥](#配置-api-密钥)
+- [前台运行](#前台运行)
+- [后台运行](#后台运行生产推荐)
+- [常见问题](#常见问题)
+
+---
+
+## 📋 配置 API 密钥
+
+首先解决 `.env` 配置问题，这是应用启动的必要条件。
+
+### 步骤1：创建 .env 文件
+
+```bash
+cd /www/wwwroot/binance
+
+# 复制模板文件
+cp .env.example .env
+```
+
+### 步骤2：编辑并填入 API 密钥
+
+```bash
+# 使用 nano 编辑（简单）
+nano .env
+
+# 或使用 vim 编辑（高级）
+vim .env
+```
+
+### 步骤3：设置你的 API 密钥
+
+编辑文件内容，找到以下行并填入你的密钥：
+
+```bash
+# 币安期货API配置
+BINANCE_API_KEY=你的币安API密钥
+BINANCE_API_SECRET=你的币安API秘密
+
+# DeepSeek AI API配置
+DEEPSEEK_API_KEY=你的DeepSeek API密钥
+
+# 应用配置（可选）
+REFRESH_INTERVAL=2
+KLINE_INTERVAL=1h
+APP_TITLE=币安期货AI分析系统
+SERVER_PORT=8501
+SERVER_ADDRESS=0.0.0.0
+DATABASE_PATH=./analysis_cache.db
+DEBUG_MODE=false
+```
+
+### 步骤4：保存文件
+
+- **nano**: 按 `Ctrl+O` 保存，`Ctrl+X` 退出
+- **vim**: 按 `Esc` 进入命令模式，输入 `:wq` 保存退出
+
+---
+
 ## 问题诊断
+
+### 问题：应用启动报错 `BINANCE_API_KEY not found`
+
+**原因**：`.env` 文件不存在或 API 密钥未配置
+
+**解决**：按照上面的 [配置 API 密钥](#配置-api-密钥) 部分操作
+
+---
+
+### 问题：`streamlit: command not found`
+
+**原因**：虚拟环境未激活
+
+**解决**：使用虚拟环境的完整路径，或运行启动脚本（见下面）
+
+---
+
+## 🖥️ 前台运行
+
+适合开发测试和调试。
+
+### 方法1：使用启动脚本（最简单 ⭐）
+
+```bash
+cd /www/wwwroot/binance
+./run.sh
+```
+
+这个脚本会自动：
+- 检测和创建虚拟环境（如果不存在）
+- 加载 .env 文件的配置
+- 启动应用
+- 显示应用日志
+
+### 方法2：使用虚拟环境中的 streamlit
+
+```bash
+cd /www/wwwroot/binance
+source venv/bin/activate
+streamlit run main.py
+```
+
+### 方法3：直接使用完整路径
+
+```bash
+./venv/bin/streamlit run main.py
+```
+
+---
+
+## 🎯 后台运行（生产推荐）
+
+适合在服务器上长期运行。
+
+### 使用 daemon.sh 管理脚本（⭐ 强烈推荐）
+
+```bash
+# 启动应用（后台运行）
+./daemon.sh start
+
+# 查看运行状态
+./daemon.sh status
+
+# 查看实时日志
+./daemon.sh logs
+
+# 停止应用
+./daemon.sh stop
+
+# 重启应用
+./daemon.sh restart
+```
+
+**daemon.sh 脚本的优点**：
+- ✅ 自动检查和创建虚拟环境
+- ✅ 自动加载 .env 配置
+- ✅ 后台运行，不占用终端
+- ✅ 自动管理进程和日志
+- ✅ 支持启动/停止/重启/查看日志
+
+### 使用 nohup 手动后台运行
+
+```bash
+source venv/bin/activate
+
+# 后台运行，忽略终端关闭信号
+nohup streamlit run main.py \
+    --server.address=0.0.0.0 \
+    --server.port=8501 \
+    > streamlit.log 2>&1 &
+
+# 查看日志
+tail -f streamlit.log
+```
+
+### 使用 systemd 服务（生产推荐）
+
+部署脚本会自动创建 systemd 服务。如果没有，可手动创建：
+
+```bash
+# 创建 systemd 服务文件
+sudo tee /etc/systemd/system/binance-ai.service > /dev/null << EOF
+[Unit]
+Description=Binance AI Analyzer
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/www/wwwroot/binance
+Environment="PATH=/www/wwwroot/binance/venv/bin"
+EnvironmentFile=/www/wwwroot/binance/.env
+ExecStart=/www/wwwroot/binance/venv/bin/streamlit run main.py \
+    --server.address=0.0.0.0 \
+    --server.port=8501
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 启用并启动服务
+sudo systemctl daemon-reload
+sudo systemctl enable binance-ai
+sudo systemctl start binance-ai
+
+# 查看状态
+sudo systemctl status binance-ai
+
+# 查看日志
+sudo journalctl -u binance-ai -f
+```
+
+---
+
+## 🌐 访问应用
+
+无论使用哪种方法，应用启动后可以访问：
+
+```
+http://localhost:8501
+```
+
+或者从远程访问（如果在服务器上）：
+
+```
+http://your-server-ip:8501
+```
+
+---
+
+## 📋 常见问题
 
 ```bash
 $ streamlit run main.py

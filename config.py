@@ -1,15 +1,21 @@
 """
 币安期货AI分析系统 - 配置管理模块
 
-所有敏感信息（API密钥）应通过环境变量传入，不应硬编码在代码中。
+所有敏感信息（API密钥）应通过环境变量或 .env 文件传入，不应硬编码在代码中。
 
-使用方法：
-    # Linux/Mac
+使用方法（任选其一）：
+
+方法1：通过 .env 文件（推荐）
+    1. 复制 .env.example 为 .env
+    2. 编辑 .env 文件，填入你的API密钥
+    3. 运行应用即可
+
+方法2：通过环境变量（Linux/Mac）
     export BINANCE_API_KEY="your-key"
     export BINANCE_API_SECRET="your-secret"
     export DEEPSEEK_API_KEY="your-key"
     
-    # Windows
+方法3：通过环境变量（Windows）
     set BINANCE_API_KEY=your-key
     set BINANCE_API_SECRET=your-secret
     set DEEPSEEK_API_KEY=your-key
@@ -17,6 +23,43 @@
 
 import os
 from typing import Optional
+from pathlib import Path
+
+
+def _load_dotenv():
+    """
+    从 .env 文件加载环境变量
+    支持在应用启动前自动加载配置
+    """
+    env_file = Path(__file__).parent / ".env"
+    
+    if env_file.exists():
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    # 跳过注释和空行
+                    if not line or line.startswith("#"):
+                        continue
+                    # 解析 KEY=VALUE 格式
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        key = key.strip()
+                        value = value.strip()
+                        # 移除引号
+                        if value.startswith('"') and value.endswith('"'):
+                            value = value[1:-1]
+                        elif value.startswith("'") and value.endswith("'"):
+                            value = value[1:-1]
+                        # 设置环境变量（不覆盖已存在的）
+                        if key and not os.getenv(key):
+                            os.environ[key] = value
+        except Exception as e:
+            print(f"⚠️ 警告: 读取 .env 文件失败: {e}")
+
+
+# 在加载配置之前先尝试读取 .env 文件
+_load_dotenv()
 
 
 def _get_env_or_fail(key: str, description: str) -> str:
@@ -37,12 +80,17 @@ def _get_env_or_fail(key: str, description: str) -> str:
     if not value:
         raise ValueError(
             f"缺少必需的环境变量: {key} ({description})\n"
-            f"请设置环境变量后重试。示例: export {key}=your-value"
+            f"请设置环境变量后重试。\n\n"
+            f"快速解决方案:\n"
+            f"  1. 复制 .env.example 为 .env\n"
+            f"  2. 编辑 .env 文件，填入你的API密钥\n"
+            f"  3. 重新运行应用\n\n"
+            f"或手动设置环境变量: export {key}=your-value"
         )
     return value
 
 
-# ==================== 必需的API密钥（必须通过环境变量提供） ====================
+# ==================== 必需的API密钥（必须通过环境变量或 .env 文件提供） ====================
 try:
     API_KEY = _get_env_or_fail("BINANCE_API_KEY", "币安期货API密钥")
     API_SECRET = _get_env_or_fail("BINANCE_API_SECRET", "币安期货API密钥秘密")
