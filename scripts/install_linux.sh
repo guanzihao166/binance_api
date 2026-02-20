@@ -131,16 +131,11 @@ create_app_directory() {
 get_application_code() {
     log_info "获取应用代码..."
     
-    # 如果当前目录是git仓库，则直接copy
-    if [[ -d ".git" ]]; then
-        log_info "从当前git仓库复制代码..."
-        # 获取脚本所在目录的父目录（项目根目录）
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-        cp -r "$SCRIPT_DIR"/* "$APP_DIR/" || log_warning "复制文件时出现错误（可忽略）"
+    # 从GitHub克隆项目
+    if git clone https://github.com/guanzihao166/binance_api.git "$APP_DIR"; then
+        log_success "项目代码克隆完成"
     else
-        log_warning "请确保已克隆项目到: $APP_DIR"
-        log_info "您可以运行以下命令克隆项目："
-        echo "  git clone https://github.com/guanzihao166/binance_api.git /opt/binance-ai-analyzer"
+        log_error "克隆项目失败，请检查网络连接"
         exit 1
     fi
     

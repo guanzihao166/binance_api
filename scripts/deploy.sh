@@ -112,14 +112,14 @@ fi
 # 更新代码
 log_info "更新代码..."
 if [[ -d ".git" ]]; then
-    git pull origin main || {
+    git pull origin master || {
         log_error "代码更新失败，尝试恢复备份..."
         exit 1
     }
     log_success "代码更新完成"
 else
     log_error "此目录不是git仓库，无法自动更新"
-    echo "请手动更新代码或使用git clone"
+    echo "请确保在项目目录中运行此脚本"
     exit 1
 fi
 
