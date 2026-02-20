@@ -7,7 +7,9 @@
 # 功能：全自动安装币安期货AI分析系统到Linux服务器
 # 支持系统：Ubuntu 20.04+, Debian 11+, Rocky Linux 8+, CentOS 8+
 # 使用权限：需要sudo权限
-# 用法：sudo ./install_linux.sh
+# 用法：
+#   sudo ./install_linux.sh                    # 在当前目录拉取代码
+#   sudo ./install_linux.sh /custom/path       # 在指定目录拉取代码
 #
 # 安装内容：
 #   1. Python 3.11+ 和 pip
@@ -17,8 +19,7 @@
 #   5. 创建 systemd 服务文件
 #   6. 启动系统服务
 #
-# 安装路径：/opt/binance-ai-analyzer/
-# 服务名称：binance-ai-analyzer
+# 注：目录位置由第一个参数指定，默认为当前目录 (.)
 #
 ################################################################################
 
@@ -32,7 +33,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'  # No Color
 
 # 全局配置
-APP_DIR="/opt/binance-ai-analyzer"
+APP_DIR="${1:-.}"  # 使用第一个参数作为目录，默认为当前目录 (.)
 SERVICE_NAME="binance-ai-analyzer"
 GITHUB_REPO="https://github.com/guanzihao166/binance_api.git"
 
@@ -115,8 +116,14 @@ install_system_packages() {
     log_success "系统依赖安装完成"
 }
 
-# 检查旧应用目录并备份
+# 检查应用目录
 check_and_backup_app_dir() {
+    # 如果是当前目录，则跳过备份
+    if [[ "$APP_DIR" == "." ]]; then
+        log_info "在当前目录拉取代码"
+        return 0
+    fi
+    
     log_info "检查应用目录: $APP_DIR"
     
     if [[ -d "$APP_DIR" ]]; then
@@ -132,16 +139,24 @@ get_application_code() {
     log_info "获取应用代码..."
     
     # 从GitHub克隆项目
-    # 直接克隆到目标目录（目录不存在时会自动创建）
-    if git clone "$GITHUB_REPO" "$APP_DIR"; then
-        log_success "项目代码克隆完成"
+    if [[ "$APP_DIR" == "." ]]; then
+        # 当前目录模式：使用"."作为目标
+        if git clone "$GITHUB_REPO" .; then
+            log_success "项目代码克隆完成"
+        else
+            log_error "克隆项目失败，请检查网络连接"
+            exit 1
+        fi
     else
-        log_error "克隆项目失败，请检查网络连接"
-        exit 1
+        # 指定目录模式：创建新目录
+        if git clone "$GITHUB_REPO" "$APP_DIR"; then
+            log_success "项目代码克隆完成"
+            cd "$APP_DIR"
+        else
+            log_error "克隆项目失败，请检查网络连接"
+            exit 1
+        fi
     fi
-    
-    # 进入应用目录
-    cd "$APP_DIR"
     
     log_success "应用代码已就位"
 }
@@ -269,6 +284,13 @@ EOF
 
 # 创建systemd服务文件
 create_systemd_service() {
+    # 如果在当前目录运行，跳过systemd服务创建
+    if [[ "$APP_DIR" == "." ]]; then
+        log_warning "当前目录模式，跳过systemd服务创建"
+        log_info "可手动运行: streamlit run main.py"
+        return 0
+    fi
+    
     log_info "创建systemd服务文件..."
     
     SERVICE_FILE="/etc/systemd/system/binance-ai-analyzer.service"
@@ -317,6 +339,11 @@ EOF
 
 # 启用和启动服务
 enable_and_start_service() {
+    # 如果在当前目录运行，跳过systemd相关操作
+    if [[ "$APP_DIR" == "." ]]; then
+        return 0
+    fi
+    
     log_info "启用systemd服务..."
     
     systemctl daemon-reload
@@ -344,31 +371,56 @@ show_completion_info() {
     echo -e "${GREEN}  币安期货AI分析系统安装完成！${NC}"
     echo -e "${GREEN}════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "${BLUE}ℹ️  应用信息：${NC}"
-    echo "  应用路径: $APP_DIR"
-    echo "  服务名称: binance-ai-analyzer"
-    echo "  配置文件: $APP_DIR/.env"
-    echo ""
-    echo -e "${BLUE}📋 常用命令：${NC}"
-    echo "  查看服务状态: systemctl status binance-ai-analyzer"
-    echo "  查看实时日志: journalctl -u binance-ai-analyzer -f"
-    echo "  重启服务: systemctl restart binance-ai-analyzer"
-    echo "  停止服务: systemctl stop binance-ai-analyzer"
-    echo "  启动服务: systemctl start binance-ai-analyzer"
-    echo ""
-    echo -e "${BLUE}🌐 访问应用：${NC}"
-    echo "  本地访问: http://localhost:8501"
-    echo "  远程访问: http://your-server-ip:8501"
-    echo ""
-    echo -e "${BLUE}⚙️  修改配置：${NC}"
-    echo "  编辑 $APP_DIR/.env 文件"
-    echo "  运行：systemctl restart binance-ai-analyzer"
-    echo ""
+    
+    if [[ "$APP_DIR" == "." ]]; then
+        # 当前目录模式
+        echo -e "${BLUE}ℹ️  应用信息：${NC}"
+        echo "  应用路径: 当前目录"
+        echo "  配置文件: ./.env"
+        echo ""
+        echo -e "${BLUE}▶️  启动应用：${NC}"
+        echo "  运行: streamlit run main.py"
+        echo ""
+        echo -e "${BLUE}🌐 访问应用：${NC}"
+        echo "  本地访问: http://localhost:8501"
+        echo ""
+        echo -e "${BLUE}⚙️  修改配置：${NC}"
+        echo "  编辑 ./.env 文件"
+        echo "  重新启动应用"
+        echo ""
+    else
+        # 指定目录模式
+        echo -e "${BLUE}ℹ️  应用信息：${NC}"
+        echo "  应用路径: $APP_DIR"
+        echo "  服务名称: binance-ai-analyzer"
+        echo "  配置文件: $APP_DIR/.env"
+        echo ""
+        echo -e "${BLUE}📋 常用命令：${NC}"
+        echo "  查看服务状态: systemctl status binance-ai-analyzer"
+        echo "  查看实时日志: journalctl -u binance-ai-analyzer -f"
+        echo "  重启服务: systemctl restart binance-ai-analyzer"
+        echo "  停止服务: systemctl stop binance-ai-analyzer"
+        echo "  启动服务: systemctl start binance-ai-analyzer"
+        echo ""
+        echo -e "${BLUE}🌐 访问应用：${NC}"
+        echo "  本地访问: http://localhost:8501"
+        echo "  远程访问: http://your-server-ip:8501"
+        echo ""
+        echo -e "${BLUE}⚙️  修改配置：${NC}"
+        echo "  编辑 $APP_DIR/.env 文件"
+        echo "  运行：systemctl restart binance-ai-analyzer"
+        echo ""
+    fi
     
     # 检查是否使用了占位符
-    if grep -q "PLACEHOLDER" "$APP_DIR/.env"; then
+    ENV_FILE="${APP_DIR}/.env"
+    if [[ "$APP_DIR" == "." ]]; then
+        ENV_FILE="./.env"
+    fi
+    
+    if [[ -f "$ENV_FILE" ]] && grep -q "PLACEHOLDER" "$ENV_FILE"; then
         echo -e "${RED}❌ 警告：检测到占位符API密钥${NC}"
-        echo -e "${YELLOW}   请立即编辑 $APP_DIR/.env 文件${NC}"
+        echo -e "${YELLOW}   请立即编辑 $ENV_FILE 文件${NC}"
         echo -e "${YELLOW}   用真实的API密钥替换以下字段：${NC}"
         echo -e "${YELLOW}   - BINANCE_API_KEY${NC}"
         echo -e "${YELLOW}   - BINANCE_API_SECRET${NC}"
@@ -381,7 +433,7 @@ show_completion_info() {
     echo "  快速开始: $APP_DIR/QUICKSTART.md"
     echo ""
     echo -e "${YELLOW}⚠️  重要提示：${NC}"
-    echo "  - API密钥已安全保存在 $APP_DIR/.env"
+    echo "  - API密钥已安全保存在 $ENV_FILE"
     echo "  - 禁止将 .env 文件提交到Git"
     echo "  - 定期检查日志排查问题"
     echo "  - 使用Nginx反向代理以启用HTTPS（推荐）"
