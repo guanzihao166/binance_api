@@ -31,6 +31,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'  # No Color
 
+# 全局配置
+APP_DIR="/opt/binance-ai-analyzer"
+SERVICE_NAME="binance-ai-analyzer"
+GITHUB_REPO="https://github.com/guanzihao166/binance_api.git"
+
 # 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -110,21 +115,16 @@ install_system_packages() {
     log_success "系统依赖安装完成"
 }
 
-# 创建应用目录
-create_app_directory() {
-    APP_DIR="/opt/binance-ai-analyzer"
-    
-    log_info "创建应用目录: $APP_DIR"
+# 检查旧应用目录并备份
+check_and_backup_app_dir() {
+    log_info "检查应用目录: $APP_DIR"
     
     if [[ -d "$APP_DIR" ]]; then
         log_warning "目录已存在，备份旧版本..."
-        mv "$APP_DIR" "${APP_DIR}.$(date +%Y%m%d_%H%M%S).bak"
+        # 确保目录名不以斜杠结尾
+        APP_DIR_CLEAN=${APP_DIR%/}
+        mv "$APP_DIR_CLEAN" "${APP_DIR_CLEAN}.$(date +%Y%m%d_%H%M%S).bak"
     fi
-    
-    mkdir -p "$APP_DIR"
-    cd "$APP_DIR"
-    
-    log_success "应用目录已创建"
 }
 
 # 获取应用代码
@@ -132,12 +132,16 @@ get_application_code() {
     log_info "获取应用代码..."
     
     # 从GitHub克隆项目
-    if git clone https://github.com/guanzihao166/binance_api.git "$APP_DIR"; then
+    # 直接克隆到目标目录（目录不存在时会自动创建）
+    if git clone "$GITHUB_REPO" "$APP_DIR"; then
         log_success "项目代码克隆完成"
     else
         log_error "克隆项目失败，请检查网络连接"
         exit 1
     fi
+    
+    # 进入应用目录
+    cd "$APP_DIR"
     
     log_success "应用代码已就位"
 }
@@ -399,7 +403,7 @@ main() {
     
     detect_os
     install_system_packages
-    create_app_directory
+    check_and_backup_app_dir
     get_application_code
     create_virtual_environment
     install_python_packages
