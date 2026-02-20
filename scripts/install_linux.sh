@@ -161,19 +161,43 @@ get_application_code() {
     log_success "应用代码已就位"
 }
 
+# 创建便捷启动脚本
+create_startup_script() {
+    log_info "创建便捷启动脚本..."
+    
+    STARTUP_SCRIPT="$APP_DIR/start.sh"
+    
+    cat > "$STARTUP_SCRIPT" << 'EOF'
+#!/bin/bash
+# 币安期货AI分析系统启动脚本
+
+cd "$(dirname "$0")"
+echo "启动币安期货AI分析系统..."
+echo "访问地址: http://localhost:8501"
+echo ""
+
+# 使用虚拟环境中的 streamlit 运行应用
+./venv/bin/streamlit run main.py \
+    --server.address=0.0.0.0 \
+    --server.port=8501 \
+    --logger.level=info
+EOF
+
+    chmod +x "$STARTUP_SCRIPT"
+    log_success "启动脚本已创建: $APP_DIR/start.sh"
+}
+
 # 创建Python虚拟环境
 create_virtual_environment() {
     log_info "创建Python虚拟环境..."
     
     python3.11 -m venv "$APP_DIR/venv" || python3 -m venv "$APP_DIR/venv"
     
-    # 激活虚拟环境
-    source "$APP_DIR/venv/bin/activate"
-    
-    # 升级pip
-    pip install -q --upgrade pip setuptools wheel
+    # 使用虚拟环境的完整路径来升级pip（不依赖于激活）
+    "$APP_DIR/venv/bin/python" -m pip install -q --upgrade pip setuptools wheel
     
     log_success "虚拟环境创建完成"
+    log_info "虚拟环境位置: $APP_DIR/venv"
 }
 
 # 安装Python依赖
@@ -182,12 +206,9 @@ install_python_packages() {
     
     cd "$APP_DIR"
     
-    # 激活虚拟环境
-    source "$APP_DIR/venv/bin/activate"
-    
-    # 安装要求的包
+    # 使用虚拟环境的完整路径来安装依赖
     if [[ -f "requirements.txt" ]]; then
-        pip install -q -r requirements.txt
+        "$APP_DIR/venv/bin/pip" install -q -r requirements.txt
         log_success "Python依赖安装完成"
     else
         log_error "找不到 requirements.txt 文件"
@@ -377,9 +398,18 @@ show_completion_info() {
         echo -e "${BLUE}ℹ️  应用信息：${NC}"
         echo "  应用路径: 当前目录"
         echo "  配置文件: ./.env"
+        echo "  虚拟环境: ./venv"
         echo ""
-        echo -e "${BLUE}▶️  启动应用：${NC}"
-        echo "  运行: streamlit run main.py"
+        echo -e "${BLUE}▶️  启动应用 - 方法1（推荐）：${NC}"
+        echo "  运行: ./start.sh"
+        echo ""
+        echo -e "${BLUE}▶️  启动应用 - 方法2（手动激活虚拟环境）：${NC}"
+        echo "  1. 激活虚拟环境: source venv/bin/activate"
+        echo "  2. 运行应用: streamlit run main.py"
+        echo "  3. 关闭应用: deactivate（退出虚拟环境）"
+        echo ""
+        echo -e "${BLUE}▶️  启动应用 - 方法3（直接使用虚拟环境中的streamlit）：${NC}"
+        echo "  运行: ./venv/bin/streamlit run main.py"
         echo ""
         echo -e "${BLUE}🌐 访问应用：${NC}"
         echo "  本地访问: http://localhost:8501"
@@ -459,6 +489,7 @@ main() {
     get_application_code
     create_virtual_environment
     install_python_packages
+    create_startup_script
     get_api_keys
     create_env_file
     create_systemd_service
