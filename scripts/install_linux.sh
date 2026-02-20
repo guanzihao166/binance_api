@@ -176,33 +176,63 @@ install_python_packages() {
     fi
 }
 
-# 交互式输入API密钥
+# 配置API密钥（支持交互式和非交互式环境）
 get_api_keys() {
-    log_info "配置API密钥（安全提示：输入内容不会显示）"
-    echo ""
-    
-    # 币安API密钥
-    read -p "请输入币安API密钥: " -r BINANCE_API_KEY
-    if [[ -z "$BINANCE_API_KEY" ]]; then
-        log_error "币安API密钥不能为空"
-        exit 1
+    # 检查是否为交互式环境 (-t 0 检查标准输入是否是终端)
+    if [[ -t 0 ]]; then
+        # 交互式环境：提示用户输入
+        log_info "配置API密钥（安全提示：输入内容不会显示）"
+        echo ""
+        
+        # 币安API密钥
+        read -p "请输入币安API密钥: " -r BINANCE_API_KEY
+        if [[ -z "$BINANCE_API_KEY" ]]; then
+            log_error "币安API密钥不能为空"
+            exit 1
+        fi
+        
+        read -p "请输入币安API密钥秘密: " -r BINANCE_API_SECRET
+        if [[ -z "$BINANCE_API_SECRET" ]]; then
+            log_error "币安API密钥秘密不能为空"
+            exit 1
+        fi
+        
+        # DeepSeek API密钥
+        read -p "请输入DeepSeek API密钥: " -r DEEPSEEK_API_KEY
+        if [[ -z "$DEEPSEEK_API_KEY" ]]; then
+            log_error "DeepSeek API密钥不能为空"
+            exit 1
+        fi
+        
+        echo ""
+        log_success "API密钥已保存"
+    else
+        # 非交互式环境：从环境变量读取
+        log_info "检测到非交互式环境，从环境变量读取API配置..."
+        
+        BINANCE_API_KEY="${BINANCE_API_KEY:-}"
+        BINANCE_API_SECRET="${BINANCE_API_SECRET:-}"
+        DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-}"
+        
+        # 如果环境变量为空，使用占位符（需要后续手动配置）
+        if [[ -z "$BINANCE_API_KEY" ]] || [[ -z "$BINANCE_API_SECRET" ]] || [[ -z "$DEEPSEEK_API_KEY" ]]; then
+            log_warning "检测到部分API密钥未配置"
+            log_warning "请设置以下环境变量后重新运行："
+            log_warning "  export BINANCE_API_KEY='your-key'"
+            log_warning "  export BINANCE_API_SECRET='your-secret'"
+            log_warning "  export DEEPSEEK_API_KEY='your-key'"
+            log_warning ""
+            
+            # 使用占位符，允许脚本继续运行
+            BINANCE_API_KEY="${BINANCE_API_KEY:-PLACEHOLDER_API_KEY}"
+            BINANCE_API_SECRET="${BINANCE_API_SECRET:-PLACEHOLDER_API_SECRET}"
+            DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-PLACEHOLDER_DEEPSEEK_KEY}"
+            
+            log_warning "使用占位符继续安装，请在安装后编辑 .env 文件配置真实密钥"
+        else
+            log_success "从环境变量读取API密钥成功"
+        fi
     fi
-    
-    read -p "请输入币安API密钥秘密: " -r BINANCE_API_SECRET
-    if [[ -z "$BINANCE_API_SECRET" ]]; then
-        log_error "币安API密钥秘密不能为空"
-        exit 1
-    fi
-    
-    # DeepSeek API密钥
-    read -p "请输入DeepSeek API密钥: " -r DEEPSEEK_API_KEY
-    if [[ -z "$DEEPSEEK_API_KEY" ]]; then
-        log_error "DeepSeek API密钥不能为空"
-        exit 1
-    fi
-    
-    echo ""
-    log_success "API密钥已保存"
 }
 
 # 创建配置文件
@@ -330,6 +360,18 @@ show_completion_info() {
     echo "  编辑 $APP_DIR/.env 文件"
     echo "  运行：systemctl restart binance-ai-analyzer"
     echo ""
+    
+    # 检查是否使用了占位符
+    if grep -q "PLACEHOLDER" "$APP_DIR/.env"; then
+        echo -e "${RED}❌ 警告：检测到占位符API密钥${NC}"
+        echo -e "${YELLOW}   请立即编辑 $APP_DIR/.env 文件${NC}"
+        echo -e "${YELLOW}   用真实的API密钥替换以下字段：${NC}"
+        echo -e "${YELLOW}   - BINANCE_API_KEY${NC}"
+        echo -e "${YELLOW}   - BINANCE_API_SECRET${NC}"
+        echo -e "${YELLOW}   - DEEPSEEK_API_KEY${NC}"
+        echo ""
+    fi
+    
     echo -e "${BLUE}📚 文档：${NC}"
     echo "  README: $APP_DIR/README.md"
     echo "  快速开始: $APP_DIR/QUICKSTART.md"

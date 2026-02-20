@@ -144,6 +144,21 @@ sudo systemctl start binance-ai-analyzer
 sudo systemctl status binance-ai-analyzer
 ```
 
+#### 非交互式部署（CI/CD、自动化部署）
+```bash
+# 设置API密钥环境变量，然后运行脚本
+export BINANCE_API_KEY="your-api-key"
+export BINANCE_API_SECRET="your-api-secret"
+export DEEPSEEK_API_KEY="your-deepseek-key"
+
+# 运行安装脚本（不需要交互输入）
+sudo -E ./install_linux.sh
+```
+
+**说明：** `-E` 参数让 sudo 保留用户的环境变量。脚本会自动检测是否为交互式环境：
+- 如果环境变量已设置，直接使用它们
+- 如果环境变量未设置，使用占位符并在安装完成后提示用户编辑 `.env` 文件
+
 #### 手动部署步骤
 ```bash
 # 1. 更新系统
