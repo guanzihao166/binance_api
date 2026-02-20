@@ -1,7 +1,7 @@
 # 币安期货AI分析系统 🚀
 
 [![GitHub License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/streamlit-v1.25%2B-red)](https://streamlit.io/)
 
 一个基于 **AI（DeepSeek）** 和 **大数据分析** 的币安期货实时监控系统，集成智能分析、历史命中率跟踪、以及完整的风险管理工具。专为专业交易者和量化研究人员设计。
@@ -51,7 +51,7 @@
 - **磁盘**: 500 MB（用于数据库）
 
 ### 推荐配置（生产环境）
-- **Python**: 3.10+
+- **Python**: 3.11+
 - **操作系统**: Ubuntu 20.04 LTS / Rocky Linux 8+
 - **RAM**: 2 GB
 - **磁盘**: 2 GB
@@ -148,7 +148,7 @@ sudo systemctl status binance-ai-analyzer
 ```bash
 # 1. 更新系统
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3.10 python3.10-venv python3-pip git
+sudo apt install -y python3.11 python3.11-venv python3-pip git
 
 # 2. 创建应用目录
 sudo mkdir -p /opt/binance-ai-analyzer

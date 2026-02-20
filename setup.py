@@ -9,8 +9,8 @@ import os
 
 def check_python_version():
     """检查Python版本"""
-    if sys.version_info < (3, 8):
-        print("❌ Python版本过低，需要Python 3.8或更高")
+    if sys.version_info < (3, 11):
+        print("❌ Python版本过低，需要Python 3.11或更高")
         print(f"当前版本: {sys.version}")
         sys.exit(1)
     print(f"✓ Python版本 {sys.version.split()[0]} 符合要求")

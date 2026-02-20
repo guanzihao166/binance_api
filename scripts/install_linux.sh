@@ -10,7 +10,7 @@
 # 用法：sudo ./install_linux.sh
 #
 # 安装内容：
-#   1. Python 3.10+ 和 pip
+#   1. Python 3.11+ 和 pip
 #   2. 创建虚拟环境
 #   3. 安装Python依赖（requirements.txt）
 #   4. 创建 .env 配置文件（交互式输入）
@@ -79,9 +79,9 @@ install_system_packages() {
             
             log_info "安装系统依赖..."
             apt-get install -y \
-                python3.10 \
-                python3.10-venv \
-                python3.10-dev \
+                python3.11 \
+                python3.11-venv \
+                python3.11-dev \
                 python3-pip \
                 git \
                 curl \
@@ -94,8 +94,8 @@ install_system_packages() {
             log_info "安装系统依赖..."
             dnf groupinstall -y "Development Tools" > /dev/null 2>&1
             dnf install -y \
-                python3.10 \
-                python3.10-devel \
+                python3.11 \
+                python3.11-devel \
                 git \
                 curl \
                 wget > /dev/null 2>&1
@@ -146,7 +146,7 @@ get_application_code() {
 create_virtual_environment() {
     log_info "创建Python虚拟环境..."
     
-    python3.10 -m venv "$APP_DIR/venv" || python3 -m venv "$APP_DIR/venv"
+    python3.11 -m venv "$APP_DIR/venv" || python3 -m venv "$APP_DIR/venv"
     
     # 激活虚拟环境
     source "$APP_DIR/venv/bin/activate"
